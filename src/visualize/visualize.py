@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 
-def plot_img_map(img, map, clim = 4, cb_max = 8, filepath="output", save = False):
+def plot_img_map(img, map, clim = 4, cb_max = 8, filepath="output", save = False, idx = None):
     img_0, img_1 = img
     map_0, map_1 = map
     plt.figure(figsize=(20, 20))
@@ -33,7 +33,12 @@ def plot_img_map(img, map, clim = 4, cb_max = 8, filepath="output", save = False
     if save:
         if not os.path.exists(filepath):
             os.makedirs(filepath)
-        filepath = os.path.join(filepath, 'output.png')
+
+        if idx is None:
+            filepath = os.path.join(filepath, 'output.png')
+        else:
+            filepath = os.path.join(filepath, f'output_{idx}.png')
+
         plt.savefig(filepath)
 
 def compare_plot_func(data_groundtruth, data_estimated, dof, t_start, t_stop, save, mark='m^'):

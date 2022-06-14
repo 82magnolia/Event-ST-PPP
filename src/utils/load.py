@@ -29,6 +29,7 @@ def load_dataset(name, path_dataset, sequence):
         LUT = LUT.reshape((-1, 1, 2))
         LUT = undo_distortion(LUT, instrinsic_matrix, dist_co).reshape((width, height, 2))
         events_set = events.to_numpy()
+        events_set[:, 0] -= events_set[0, 0]
     print("Events total count: ", len(events_set))
     print("Time duration of the sequence: {} s".format(events_set[-1][0] - events_set[0][0]))
     return LUT, events_set, height, width, fx, fy, px, py

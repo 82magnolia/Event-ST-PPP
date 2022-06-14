@@ -33,6 +33,7 @@ class VelocityEstimator(Estimator):
         self.lr_step = lr_step
         self.lr_decay = lr_decay
         self.iters = iters
+        self.save_idx = 0
         print("Sequence: {}".format(sequence))
 
     @timer
@@ -76,13 +77,12 @@ class VelocityEstimator(Estimator):
                 _, _, img_1, map_1 = self.calResult(events_tensor, res, *args, warp=True, fixed_size=False, padding = 50)
                 clim = 4 if 'shapes' not in self.sequence else 10
                 cb_max = 8 if 'shapes' not in self.sequence else 20
-                plot_img_map([img_0, img_1],[map_0, map_1], clim, cb_max, filepath = img_path, save=True)
+                plot_img_map([img_0, img_1],[map_0, map_1], clim, cb_max, filepath = img_path, save=True, idx=self.save_idx)
+                self.save_idx += 1
 
             self.count += 1
             duration = time.time() - start_time
             print("Duration:{}s\n".format(duration))
-            np.savetxt(save_filepath, np.array(self.estimated_val), fmt=[
-                '%d', '%.9f', '%.9f', '%.9f', '%.9f', '%.9f', '%.9f'], delimiter=' ')
 
     def optimization(self, init_poses, events_tensor, device, *args):
         # initializing local variables for class atrributes

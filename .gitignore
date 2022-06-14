@@ -2,3 +2,5 @@
 *.prof
 *.json
 **/__pycache__/
+dataset/
+output/
