@@ -40,6 +40,7 @@ def plot_img_map(img, map, clim = 4, cb_max = 8, filepath="output", save = False
             filepath = os.path.join(filepath, f'output_{idx}.png')
 
         plt.savefig(filepath)
+    plt.close()
 
 def compare_plot_func(data_groundtruth, data_estimated, dof, t_start, t_stop, save, mark='m^'):
     if dof == 3:

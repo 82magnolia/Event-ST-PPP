@@ -1,11 +1,12 @@
 from Estimators.PPPAngularVelocityEstimator import PPPAngularVelocityEstimator
 from Estimators.PPPLinearVelocityEstimator import PPPLinearVelocityEstimator
+from Estimators.PPPJointVelocityEstimator import PPPJointVelocityEstimator
 from Estimators.CMaxAngularVelocityEstimator import CMaxAngularVelocityEstimator
 from Estimators.CMaxLinearVelocityEstimator import CMaxLinearVelocityEstimator
 
 class EstimatorFactory(object):
     def __init__(self, method, transformation, dataset, dataset_path, sequence, Ne, overlap=0, fixed_size = True, padding = 100,
-                    optimizer = 'Adam', optim_kwargs = None, lr = 0.05, lr_step = 250, lr_decay = 0.1, iters = 250
+                    optimizer = 'Adam', optim_kwargs = None, lr = 0.05, lr_step = 250, lr_decay = 0.1, iters = 250, joint_optimize = True
                     ) -> None:
         if method == "st-ppp":
             if transformation == "rot":
@@ -14,6 +15,9 @@ class EstimatorFactory(object):
             elif transformation == "trans":
                 print("Using method: Poisson Point Process for linear velocity estimation")
                 self.VE = PPPLinearVelocityEstimator(dataset=dataset, dataset_path=dataset_path, sequence=sequence, Ne=Ne, overlap=0, fixed_size=True, padding=100, lr=lr, lr_step=iters, iters=iters)
+            elif transformation == "joint":
+                print("Using method: Poisson Point Process for joint velocity estimation")
+                self.VE = PPPJointVelocityEstimator(dataset=dataset, dataset_path=dataset_path, sequence=sequence, Ne=Ne, overlap=0, fixed_size=True, padding=100, lr=lr, lr_step=iters, iters=iters, joint_optimize=joint_optimize)
             else:
                 print("The transformation is not supported, please read help")
                 exit()

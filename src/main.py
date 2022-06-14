@@ -18,6 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--method', default='st-ppp', help="The name of method, can be selected from ['st-ppp', 'cmax'], default as 'st-ppp'")
     parser.add_argument('-t', '--transformation', default='rot', help="The type of transformation, can be selected from ['rot', 'trans'], default as 'rot'")
     parser.add_argument('-f', '--figure', action='store_true', default=False, help="Save figures or not, default as False, use '-f' to set the flag")
+    parser.add_argument('-j', '--joint_optimize', action='store_true', default=False, help="Jointly optimize or not, default as False, use '-j' to set the flag")
 
 
     args = parser.parse_args()
@@ -33,6 +34,7 @@ if __name__ == '__main__':
     method = args.method
     trans_type = args.transformation
     save_figs = args.figure
+    joint_optimize = args.joint_optimize
 
     res_save_dir = os.path.join('output/', sequence)
     if not os.path.exists(res_save_dir):
@@ -50,7 +52,8 @@ if __name__ == '__main__':
                             padding=100, 
                             lr=lr, 
                             lr_step=iters, 
-                            iters=iters).get_estimator()
+                            iters=iters,
+                            joint_optimize=joint_optimize).get_estimator()
 
     # set save_figs to be False while not saving output figures
     VE(save_filepath, alpha, beta, count=1, save_figs=save_figs)
