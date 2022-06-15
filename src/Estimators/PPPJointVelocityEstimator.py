@@ -1,5 +1,6 @@
 from Estimators.JointVelocityEstimator import JointVelocityEstimator
 from utils.utils import *
+from utils.load import do_distortion
 
 
 class PPPJointVelocityEstimator(JointVelocityEstimator):
@@ -56,13 +57,20 @@ class PPPJointVelocityEstimator(JointVelocityEstimator):
                 point_3d = self.events_form_3d_points(events_batch)
                 warped_x, warped_y = self.events_back_project(point_3d)
                 warped_events_batch = torch.stack((events_batch[:, 0], warped_x, warped_y, events_batch[:, 3]), dim=1)
+            
+            if warp:
+                t_ref = warped_events_batch[0][0]
+                warped_events_batch = warped_events_batch.cpu().numpy()
+                warped_events_batch[:, 1:3] = do_distortion(warped_events_batch[:, 1:3], self.instrinsic_matrix, self.dist_co)
+                warped_events_batch = torch.from_numpy(warped_events_batch).to(device)
+                warped_events_batch = extract_valid(warped_events_batch, self.height, self.width)
 
             frame = self.events2frame(warped_events_batch, fixed_size = fixed_size, padding = padding)
-            frame = convGaussianFilter(frame)
+            gauss_frame = convGaussianFilter(frame)
             img = frame.sum(axis=0).cpu().detach().numpy()
 
             if cal_loss:
-                loss, map = self.poisson(frame.abs(), *args)
+                loss, map = self.poisson(gauss_frame.abs(), *args)
                 loss = loss.item()
                 map = map.cpu().detach().numpy()
 

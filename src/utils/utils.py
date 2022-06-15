@@ -26,6 +26,13 @@ def undistortion(events_batch, LUT, t_ref):
     events_batch[:, 1:3] = LUT[(events_batch[:, 1]).type(torch.long), (events_batch[:, 2]).type(torch.long), :]
     return events_batch
 
+def extract_valid(events_batch, H, W):
+    valid_x = (events_batch[:, 1].type(torch.long) < W) & (events_batch[:, 1].type(torch.long) >= 0)
+    valid_y = (events_batch[:, 2].type(torch.long) < H) & (events_batch[:, 2].type(torch.long) >= 0)
+
+    valid_idx = valid_x & valid_y
+    return events_batch[valid_idx]
+
 def timer(func):
     def acc_time(self, *args, **kwargs):
         start = time.time()

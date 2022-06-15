@@ -5,12 +5,33 @@ import cv2
 def undo_distortion(src, instrinsic_matrix, distco=None):
     dst = cv2.undistortPoints(src, instrinsic_matrix, distco, None, instrinsic_matrix)
     return dst
-    
-def do_distortion(src, instrinsic_matrix, distco=None):
-    # TODO: Start from here! Implement do_distortion and add it to calResult
-    pass
 
-def load_dataset(name, path_dataset, sequence):
+
+def do_distortion(src, instrinsic_matrix, distco=None):
+    x = src[..., 0]
+    y = src[..., 1]
+    k1 = distco[0]
+    fx = instrinsic_matrix[0, 0]
+    fy = instrinsic_matrix[1, 1]
+    cx = instrinsic_matrix[0, 2]
+    cy = instrinsic_matrix[1, 2]
+
+    norm_x = (x - cx) / fx
+    norm_y = (y - cy) / fy
+
+    r2 = norm_x * norm_x + norm_y * norm_y
+
+    distort_x = norm_x * (1 + k1 * r2)
+    distort_y = norm_y * (1 + k1 * r2)
+    
+    distort_x = distort_x * fx + cx
+    distort_y = distort_y * fy + cy
+
+    distort_pts = np.stack([distort_x, distort_y], axis=-1)
+    return distort_pts
+
+
+def load_dataset(name, path_dataset, sequence, return_intrinsics=False):
     if name == "DAVIS_240C":
         calib_data = np.loadtxt('{}/{}/calib.txt'.format(path_dataset,sequence))
         events = pd.read_csv(
@@ -46,4 +67,8 @@ def load_dataset(name, path_dataset, sequence):
         events_set[:, 0] -= events_set[0, 0]
     print("Events total count: ", len(events_set))
     print("Time duration of the sequence: {} s".format(events_set[-1][0] - events_set[0][0]))
-    return LUT, events_set, height, width, fx, fy, px, py
+
+    if return_intrinsics:
+        return LUT, events_set, height, width, fx, fy, px, py, dist_co, instrinsic_matrix
+    else:
+        return LUT, events_set, height, width, fx, fy, px, py

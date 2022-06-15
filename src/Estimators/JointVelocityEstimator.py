@@ -15,7 +15,7 @@ class JointVelocityEstimator(Estimator):
     def __init__(self, dataset, dataset_path, sequence, Ne, overlap=0, fixed_size = True, padding = 100,
                     optimizer = 'Adam', optim_kwargs = None, lr = 0.05, lr_step = 250, lr_decay = 0.1, iters = 250, joint_optimize = True
                     ) -> None:
-        LUT, events_set, height, width, fx, fy, px, py = load_dataset(dataset, dataset_path, sequence)
+        LUT, events_set, height, width, fx, fy, px, py, dist_co, instrinsic_matrix = load_dataset(dataset, dataset_path, sequence, True)
         super().__init__(height, width, fx, fy, px, py, events_set, LUT)
         self.Ne = Ne
         self.sequence = sequence
@@ -35,6 +35,8 @@ class JointVelocityEstimator(Estimator):
         self.iters = iters
         self.save_idx = 0
         self.joint_optimize = joint_optimize
+        self.dist_co = dist_co
+        self.instrinsic_matrix = instrinsic_matrix
 
         print("Sequence: {}".format(sequence))
 
@@ -48,7 +50,6 @@ class JointVelocityEstimator(Estimator):
 
         device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu') 
         self.LUT = torch.from_numpy(self.LUT).float().to(device)
-
         while True:
             start_time = time.time()
 
@@ -64,6 +65,7 @@ class JointVelocityEstimator(Estimator):
             t_end = events_batch[-1][0]
 
             events_tensor = torch.from_numpy(events_batch).float().to(device)
+            raw_events_tensor = torch.from_numpy(events_batch).float().to(device)
 
             events_tensor = undistortion(events_tensor, self.LUT, t_ref)
             print('{}: {}'.format(self.count, t_ref))
@@ -77,8 +79,8 @@ class JointVelocityEstimator(Estimator):
                 para0_rot = res_rot
             if save_figs:
                 img_path = os.path.join('output', self.sequence)
-                _, _, img_0, map_0 = self.calResult(events_tensor, np.array([0. ,0. ,0.]), np.array([0. ,0. ,0.]), *args, warp = False, fixed_size = False, padding = 50)
-                _, _, img_1, map_1 = self.calResult(events_tensor, res_trans, res_rot, *args, warp=True, fixed_size=False, padding = 50)
+                _, _, img_0, map_0 = self.calResult(raw_events_tensor, np.array([0. ,0. ,0.]), np.array([0. ,0. ,0.]), *args, warp = False, fixed_size = True, padding = 0)
+                _, _, img_1, map_1 = self.calResult(events_tensor, res_trans, res_rot, *args, warp=True, fixed_size=True, padding = 0)
                 clim = 4 if 'shapes' not in self.sequence else 10
                 cb_max = 8 if 'shapes' not in self.sequence else 20
                 plot_img_map([img_0, img_1],[map_0, map_1], clim, cb_max, filepath = img_path, save=True, idx=self.save_idx)
