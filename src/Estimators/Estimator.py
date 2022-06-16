@@ -54,10 +54,10 @@ class Estimator(object):
     def warp_event_rot(self, poses, events):
         angular_vel_matrix = self.angular_velocity_matrix(poses)
         point_3d = self.events_form_3d_points(events)
-        dt = events[:, 0]
+        dt = events[-1, 0] - events[:, 0]
         point_3d_rotated = torch.matmul(point_3d, angular_vel_matrix)
         r = torch.mul(torch.t(dt.repeat(3, 1)), point_3d_rotated)
-        coordinate_3d = point_3d - r
+        coordinate_3d = point_3d + r
         
         warped_x, warped_y = self.events_back_project(coordinate_3d)
         warped_events = torch.stack((dt, warped_x, warped_y, events[:, 3]), dim=1)
@@ -66,8 +66,8 @@ class Estimator(object):
     def warp_event_trans(self, poses, events):
         linear_vel_vector = self.linear_velocity_vector(poses)
         point_3d = self.events_form_3d_points(events)
-        dt = events[:, 0].unsqueeze(1)
-        coordinate_3d = point_3d - dt * linear_vel_vector
+        dt = (events[-1, 0] - events[:, 0]).unsqueeze(1)
+        coordinate_3d = point_3d + dt * linear_vel_vector
         warped_x, warped_y = self.events_back_project(coordinate_3d)
         warped_events = torch.stack((dt.squeeze(), warped_x, warped_y, events[:, 3]), dim=1)
         return warped_events.squeeze()
